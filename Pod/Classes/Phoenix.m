@@ -70,7 +70,7 @@
     _channels[channel.topic] = channel;
 
     // Joins channel
-    [self send:channel.topic event:@"join" payload:channel.payload];
+    [self send:channel.topic event:@"phx_join" payload:channel.payload Ref: [Phoenix returnRandomClientID]];
 
     return YES;
 }
@@ -84,7 +84,7 @@
     [_channels removeObjectForKey:channel.topic];
 
     // Leaves channel
-    [self send:channel.topic event:@"leave" payload:nil];
+    [self send:channel.topic event:@"leave" payload:nil Ref:[Phoenix returnRandomClientID]];
 
     return YES;
 }
@@ -92,17 +92,30 @@
 #pragma mark - Private
 
 - (void)sendHeartbeat {
-    [self send:@"phoenix" event:@"heartbeat" payload:@{}];
+    [self send:@"phoenix" event:@"heartbeat" payload:@{} Ref:[Phoenix returnRandomClientID]];
 }
 
 #pragma mark - Helpers
 
-- (void)send:(NSString*)topic event:(NSString*)event payload:(id)payload {
++ (NSString *) returnRandomClientID {
+    NSString *alphabet  = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXZY0123456789";
+    NSMutableString *client = [NSMutableString stringWithCapacity:5];
+    for (NSUInteger i = 0; i < 5; i++) {
+        u_int32_t r = arc4random() % [alphabet length];
+        unichar c = [alphabet characterAtIndex:r];
+        [client appendFormat:@"%C", c];
+    }
+    return (NSString *) client;
+}
+
+
+- (void)send:(NSString*)topic event:(NSString*)event payload:(id)payload Ref: (NSString *) ref {
 
     NSDictionary *message = @{
                               @"topic": topic,
                               @"event": event,
-                              @"payload": payload ?: [NSNull null]
+                              @"payload": payload ?: [NSNull null],
+                              @"ref" : [NSNull null]
                               };
 
     NSData *data = [NSJSONSerialization dataWithJSONObject:message options:0 error:nil];
@@ -188,7 +201,7 @@
 }
 
 - (void)sendEvent:(NSString*)event payload:(id)payload {
-    [_phoenix send:_topic event:event payload:payload];
+    [_phoenix send:_topic event:event payload:payload Ref:[Phoenix returnRandomClientID]];
 }
 
 - (void)on:(NSString*)event handleEventBlock:(HandleEventBlock)handleEventBlock {
