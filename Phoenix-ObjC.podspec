@@ -18,7 +18,6 @@ Pod::Spec.new do |s|
     'Phoenix-ObjC' => ['Pod/Assets/*.png']
   }
 
-  s.dependency 'SocketRocket', :git => 'https://github.com/scapegoat4U/SocketRocket.git', :tag => '0.4.xtag', :commit => '0d02a197ee6c7fed105a3117d2c3965a3296aa20'
   
   
 end
